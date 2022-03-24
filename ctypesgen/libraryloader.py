@@ -79,14 +79,18 @@ class LibraryLoader(object):
     def __call__(self, libname):
         """Given the name of a library, load it."""
         paths = self.getpaths(libname)
+        errors = []
 
         for path in paths:
             try:
                 return self.Lookup(path)
-            except:
-                pass
+            except Exception as e:  # pylint: disable=broad-except
+                if not e.args[0].startswith(path):
+                    errors.append(e.args[0])
 
-        raise ImportError("Could not load %s." % libname)
+        raise ImportError("Could not load %s%s" %
+                          (libname, "." if len(errors) == 0 else
+                           ":\n" + "\n".join(errors)))
 
     def getpaths(self, libname):
         """Return a list of paths where the library might be found."""
